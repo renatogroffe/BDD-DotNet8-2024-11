@@ -1,0 +1,40 @@
+trigger:
+  - main
+
+variables:
+  testsDirectory: './src/Temperatura.Specs'
+
+  # Agent VM image name
+  vmImageName: 'ubuntu-latest'
+stages:
+- stage: Tests
+  displayName: Tests stage
+  jobs:
+  - job: Tests
+    displayName: Tests
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'test'
+        projects: '$(testsDirectory)'
+        arguments: '--output $(testsDirectory)/reports'
+      displayName: 'Executar testes baseados em xUnit + Reqnroll'
+    - task: PublishAllureReport@1
+      condition: always()
+      inputs:
+        testResultsDir: '$(testsDirectory)/reports/allure-results'
+        reportName: 'testes-convtemperatura'
+      displayName: 'Publicar relatorio do Allure gerado via package Allure.Reqnroll'
+- stage: Build
+  displayName: Build stage
+  dependsOn: Tests
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - script: echo 'Operacao simulando build de package...'
+      displayName: 'Simulacao (Build)'
